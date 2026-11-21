@@ -8,6 +8,7 @@ const state = {
   query: '',
   sort: 'recent',    // 'recent' | 'az'
   detailId: null,
+  confirmExit: false,
   padName: null,
 };
 
@@ -70,6 +71,7 @@ const ICON = {
   pad: '<svg viewBox="0 0 24 24"><path d="M7 7h10a5 5 0 0 1 4.9 6l-.8 4a2.5 2.5 0 0 1-4.3 1.2L14.5 16h-5l-2.3 2.2A2.5 2.5 0 0 1 2.9 17l-.8-4A5 5 0 0 1 7 7zm0 3v1.5H5.5v1.5H7v1.5h1.5V13H10v-1.5H8.5V10zm9.5.2a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>',
   play: '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>',
   resume: '<svg viewBox="0 0 24 24"><path d="M5 4h3v16H5zM10 4.5v15l11-7.5z"/></svg>',
+  power: '<svg viewBox="0 0 24 24"><path d="M12 3v8M7.1 6.3a7.5 7.5 0 1 0 9.8 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
   close: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
 };
 
@@ -115,6 +117,7 @@ function renderSidebar() {
     <div class="side-bottom">
       ${item('side-settings', 'settings', null, `${ICON.gear}<span>Settings</span>`, '', state.view === 'settings')}
       ${item('side-rescan', 'rescan', null, `${ICON.refresh}<span>Rescan</span>`, '', false)}
+      ${item('side-exit', 'exit', null, `${ICON.power}<span>Exit</span>`, '', false)}
       <div class="pad-status ${state.padName ? 'on' : ''}" title="${esc(state.padName || '')}">
         ${ICON.pad}<span>${state.padName ? 'Controller connected' : 'No controller'}</span>
       </div>
@@ -272,6 +275,21 @@ function viewSystem(sys) {
 
 function renderDetail() {
   const root = $('#detail-root');
+  if (state.confirmExit) {
+    root.innerHTML = `
+      <div class="overlay center" data-action="exit-cancel-bg">
+        <div class="confirm" role="alertdialog" aria-label="Exit Retro Library">
+          ${ICON.power}
+          <h2>Exit Retro Library?</h2>
+          <div class="actions">
+            <button class="nav btn primary" data-key="exit-yes" data-action="exit-confirm">Exit</button>
+            <button class="nav btn" data-key="exit-no" data-action="exit-cancel">Cancel</button>
+          </div>
+          <p class="muted">A: choose · B: cancel</p>
+        </div>
+      </div>`;
+    return;
+  }
   const g = state.detailId && gameById(state.detailId);
   if (!g) { root.innerHTML = ''; return; }
   const sys = sysById(g.systemId);
@@ -498,6 +516,10 @@ const actions = {
   rescan: async () => { toast('Scanning…'); state.snap = await api.rescan(); coverCache.clear(); render(); toast('Library updated'); },
   detail: (el) => { state.detailId = el.dataset.id; render(); const p = $('.overlay [data-action="play"]:not([disabled])') || $('.overlay .nav'); if (p) p.focus(); },
   'close-detail': () => closeDetail(),
+  exit: () => openExit(),
+  'exit-confirm': () => api.quit(),
+  'exit-cancel': () => closeExit(),
+  'exit-cancel-bg': (el, ev) => { if (ev.target === el) closeExit(); },
   'close-detail-bg': (el, ev) => { if (ev.target === el) closeDetail(); },
   play: (el) => play(el.dataset.id),
   'load-state': (el) => play(el.dataset.id, el.dataset.file),
@@ -526,6 +548,18 @@ const actions = {
   toggle: (el) => saveSettings((d) => { d[el.dataset.id] = !d[el.dataset.id]; }),
 };
 
+function openExit() {
+  state.confirmExit = true;
+  render();
+  const yes = $('.overlay [data-action="exit-confirm"]');
+  if (yes) yes.focus();
+}
+
+function closeExit() {
+  state.confirmExit = false;
+  render();
+}
+
 function closeDetail() {
   const id = state.detailId;
   state.detailId = null;
@@ -553,8 +587,10 @@ document.addEventListener('input', (ev) => {
 });
 
 // Controller handlers
+Nav.on('exit', () => (state.confirmExit ? closeExit() : openExit()));
 Nav.on('back', () => {
-  if (state.detailId) closeDetail();
+  if (state.confirmExit) closeExit();
+  else if (state.detailId) closeDetail();
   else if (state.view !== 'home') go('home');
 });
 Nav.on('resume', (el) => {

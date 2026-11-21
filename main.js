@@ -132,6 +132,8 @@ ipcMain.handle('dialog:pickFolder', async (_e, { title }) => {
   return r.canceled ? null : r.filePaths[0];
 });
 
+ipcMain.handle('app:quit', () => app.quit());
+
 ipcMain.handle('shell:openSite', (_e, emulatorKey) => {
   const e = EMULATORS[emulatorKey];
   if (e) shell.openExternal(`https://${e.site}`);
@@ -218,6 +220,7 @@ async function captureScreens(dir) {
     ['detail', "document.querySelector('.game-tile[data-action=detail]').click()"],
     ['continue-detail', "document.querySelector('[data-action=home]').click(); setTimeout(()=>document.querySelector('.cont-card').click(),300)"],
     ['settings', "document.querySelector('[data-action=settings]').click()"],
+    ['exit-prompt', "document.querySelector('[data-action=exit]').click()"],
   ];
   win.webContents.on('console-message', (_e, level, message) => console.log(`[renderer] ${message}`));
   await wait(1500);

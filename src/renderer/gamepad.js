@@ -71,6 +71,7 @@
       case 'lb': handlers.cycle && handlers.cycle(-1); break;
       case 'rb': handlers.cycle && handlers.cycle(1); break;
       case 'start': handlers.settings && handlers.settings(); break;
+      case 'select': handlers.exit && handlers.exit(); break;
       default: break;
     }
   }

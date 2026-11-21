@@ -11,5 +11,6 @@ contextBridge.exposeInMainWorld('api', {
   launch: (gameId, stateFile) => ipcRenderer.invoke('game:launch', { gameId, stateFile }),
   cover: (gameId) => ipcRenderer.invoke('cover:get', gameId),
   fileUrl: (file) => ipcRenderer.invoke('file:url', file),
+  quit: () => ipcRenderer.invoke('app:quit'),
   onGameExited: (cb) => ipcRenderer.on('game:exited', (_e, data) => cb(data)),
 });
