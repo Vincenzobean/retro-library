@@ -1,0 +1,18 @@
+{
+  "name": "retro-library",
+  "version": "1.0.0",
+  "description": "A Steam-style library for your emulators: pick a console, browse games, resume save states.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "selftest": "node scripts/selftest.js",
+    "demo": "node scripts/selftest.js && electron . --data=test-fixtures/demo-data"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true
+  }
+}
