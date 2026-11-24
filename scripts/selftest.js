@@ -266,6 +266,19 @@ check('Play! launch uses the play core and slot', () => {
   assert.strictEqual(c.args[3], '--entryslot=2');
 });
 
+console.log('\nAuto-detect');
+check('finds "Games\\<Console>" folders once, keeps user removals', () => {
+  const s = settingsStore.defaults();
+  const root = path.join(ROOT, 'roms');
+  fs.mkdirSync(path.join(root, 'SNES'), { recursive: true });
+  const found = settingsStore.autoDetect(s, root);
+  assert.ok(found.some((f) => f.startsWith('SNES games')));
+  assert.deepStrictEqual(s.systems.snes.romDirs, [path.join(root, 'SNES')]);
+  s.systems.snes.romDirs = []; // user removes it
+  settingsStore.autoDetect(s, root);
+  assert.deepStrictEqual(s.systems.snes.romDirs, []);
+});
+
 console.log(failures ? `\n${failures} check(s) failed.` : '\nAll checks passed.');
 console.log('Demo data written to test-fixtures/demo-data (run: npm run demo)');
 process.exit(failures ? 1 : 0);

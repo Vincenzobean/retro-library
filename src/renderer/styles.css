@@ -218,6 +218,7 @@ body.kbd .game-tile:focus .cover { box-shadow: var(--focus); }
 .detail-head p { margin: 0; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .notice { margin-top: 10px; padding: 10px 12px; border-radius: 4px; background: rgba(229,115,77,.12); color: #f0b39e; font-size: 13px; }
+.settings-error { margin: 0 0 16px; user-select: text; }
 .detail-body { padding: 4px 28px 32px; }
 .detail-body h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.3px; color: #b7c5d3; margin: 22px 0 10px; }
 .save-list { display: flex; flex-direction: column; gap: 6px; }

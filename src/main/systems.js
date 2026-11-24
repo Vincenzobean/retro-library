@@ -185,6 +185,27 @@ const SYSTEMS = [
   },
 ];
 
+// Where each emulator is usually installed on Windows (checked when its path isn't set yet).
+const LOCALAPPDATA = process.env.LOCALAPPDATA || path.join(HOME, 'AppData', 'Local');
+const PF = process.env.ProgramFiles || 'C:\\Program Files';
+EMULATORS.retroarch.autoPaths = [
+  'C:\\RetroArch-Win64\\retroarch.exe', 'C:\\RetroArch\\retroarch.exe', path.join(PF, 'RetroArch', 'retroarch.exe'),
+  path.join(HOME, 'Emulators', 'RetroArch', 'retroarch.exe'),
+];
+EMULATORS.dolphin.autoPaths = [
+  path.join(HOME, 'Emulators', 'Dolphin-x64', 'Dolphin.exe'), path.join(HOME, 'Emulators', 'Dolphin', 'Dolphin.exe'),
+  path.join(PF, 'Dolphin', 'Dolphin.exe'), path.join(PF, 'Dolphin-x64', 'Dolphin.exe'),
+];
+EMULATORS.pcsx2.autoPaths = [
+  path.join(PF, 'PCSX2', 'pcsx2-qt.exe'), path.join(HOME, 'Emulators', 'PCSX2', 'pcsx2-qt.exe'),
+  path.join(LOCALAPPDATA, 'Programs', 'PCSX2', 'pcsx2-qt.exe'),
+];
+EMULATORS.duckstation.autoPaths = [
+  path.join(LOCALAPPDATA, 'Programs', 'DuckStation', 'duckstation-qt-x64-ReleaseLTCG.exe'),
+  path.join(HOME, 'Emulators', 'DuckStation', 'duckstation-qt-x64-ReleaseLTCG.exe'),
+  path.join(PF, 'DuckStation', 'duckstation-qt-x64-ReleaseLTCG.exe'),
+];
+
 // How each emulator identifies games in its save-state file names.
 EMULATORS.pcsx2.idType = 'serial';
 EMULATORS.duckstation.idType = 'serial';

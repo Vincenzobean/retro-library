@@ -30,6 +30,15 @@ let win;
 let settings;
 let library;
 let playing = null;
+let settingsError = null; // shown in the app when settings can't be read or saved
+
+// Problems are written to app.log in the data folder (and the temp folder if that fails).
+function appLog(msg) {
+  const line = `${new Date().toISOString()} ${msg}\n`;
+  try { fs.mkdirSync(DATA, { recursive: true }); fs.appendFileSync(path.join(DATA, 'app.log'), line); } catch {
+    try { fs.appendFileSync(path.join(require('os').tmpdir(), 'retro-library.log'), line); } catch {}
+  }
+}
 
 function readHistory() {
   try { return JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf8')); } catch { return {}; }
@@ -67,6 +76,7 @@ function snapshot() {
     settings,
     emulators: emulatorInfo(),
     playing,
+    settingsError,
     // Started through "Retro Library.exe"? Then Steam can point straight at that.
     steam: process.env.RETRO_LIBRARY_LAUNCHER
       ? { target: process.env.RETRO_LIBRARY_LAUNCHER, launchOptions: '--fullscreen' }
@@ -113,7 +123,13 @@ ipcMain.handle('library:rescan', () => {
 
 ipcMain.handle('settings:save', (_e, next) => {
   settings = { ...settingsStore.defaults(), ...next };
-  settingsStore.save(DATA, settings);
+  try {
+    settingsStore.save(DATA, settings);
+    settingsError = null;
+  } catch (err) {
+    settingsError = `Couldn't save settings to ${path.join(DATA, 'settings.json')}: ${err.code || ''} ${err.message}`;
+    appLog(settingsError);
+  }
   rescan();
   return snapshot();
 });
@@ -240,7 +256,21 @@ app.on('second-instance', () => {
 });
 
 app.whenReady().then(() => {
-  settings = settingsStore.load(DATA);
+  settings = settingsStore.load(DATA, (err) => {
+    settingsError = `Couldn't read settings from ${path.join(DATA, 'settings.json')}: ${err.code || ''} ${err.message}`;
+    appLog(settingsError);
+  });
+  // Find emulators and a "Games" folder next to the app ("Retro Library\Games\<Console>").
+  const found = settingsStore.autoDetect(settings, path.join(__dirname, '..', 'Games'));
+  if (found.length) {
+    appLog(`auto-detected: ${found.join('; ')}`);
+    try { settingsStore.save(DATA, settings); } catch (err) {
+      settingsError = `Couldn't save settings to ${path.join(DATA, 'settings.json')}: ${err.code || ''} ${err.message}`;
+      appLog(settingsError);
+    }
+  }
+  appLog(`started: data=${DATA} exe=${process.execPath} launcher=${process.env.RETRO_LIBRARY_LAUNCHER || '-'} steam=${process.env.SteamAppId || process.env.SteamGameId || '-'} `
+    + `settingsFile=${fs.existsSync(path.join(DATA, 'settings.json'))} retroarch=${settings.emulators.retroarch.path || '(none)'}`);
   protocol.handle('retroimg', async (req) => {
     const token = new URL(req.url).pathname.replace(/^\//, '');
     const file = imageTokens.get(token);

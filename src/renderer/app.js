@@ -129,6 +129,9 @@ function renderMain() {
   if (state.view === 'settings') main.innerHTML = viewSettings();
   else if (state.view === 'system' && sysById(state.systemId)) main.innerHTML = viewSystem(sysById(state.systemId));
   else main.innerHTML = viewHome();
+  if (state.snap.settingsError) {
+    main.insertAdjacentHTML('afterbegin', `<div class="notice settings-error">${esc(state.snap.settingsError)}</div>`);
+  }
 }
 
 function continueCard(g) {
